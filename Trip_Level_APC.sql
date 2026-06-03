@@ -1,61 +1,97 @@
 SELECT
-    dd.Month AS "Month Number",
-    dd.MonthName AS "Month",
-    dd.DayName AS "Day of Week",
+    y."Month Number",
+    y."Month",
+    y."Day of Week",
 
-    r.RouteShortName AS "Route Short Name",
-    r.RouteName AS "Route Name",
-    d.DirectionName AS "Direction",
-    tp.TripName AS "Trip",
+    y."Route Short Name",
+    y."Route Name",
+    y."Direction",
+    y."Trip",
 
-    SUM(tp.BoardCount) AS "Total Boards",
-    AVG(tp.BoardCount) AS "Average Boards per Stop Event",
-    MAX(tp.BoardCount) AS "Maximum Boards at a Stop",
+    SUM(y."BoardCount") AS "Total Boards",
+    AVG(y."BoardCount") AS "Average Boards per Stop Event",
+    MAX(y."BoardCount") AS "Maximum Boards at a Stop",
 
-    SUM(tp.AlightCount) AS "Total Alights",
-    AVG(tp.AlightCount) AS "Average Alights per Stop Event",
-    MAX(tp.AlightCount) AS "Maximum Alights at a Stop",
+    SUM(y."AlightCount") AS "Total Alights",
+    AVG(y."AlightCount") AS "Average Alights per Stop Event",
+    MAX(y."AlightCount") AS "Maximum Alights at a Stop",
 
-    AVG(tp.TotalCount) AS "Average Passenger Load",
-    MAX(tp.TotalCount) AS "Maximum Passenger Load",
+    AVG(y."TotalCount") AS "Average Passenger Load",
+    MAX(y."Median Passenger Load") AS "Median Passenger Load",
+    MAX(y."TotalCount") AS "Maximum Passenger Load",
 
     COUNT(*) AS "Observation Count"
 
-FROM VehicleLocationTP tp
+FROM (
+    SELECT
+        x.*,
 
-INNER JOIN DateDimension dd
-    ON tp.ActualArriveDateKey = dd.DateDimensionKey
+        PERCENTILE_CONT(0.5)
+        WITHIN GROUP (ORDER BY x."TotalCount")
+        OVER (
+            PARTITION BY
+                x."Month Number",
+                x."Month",
+                x."Day of Week",
+                x."Route Short Name",
+                x."Route Name",
+                x."Direction",
+                x."Trip"
+        ) AS "Median Passenger Load"
 
-INNER JOIN sch_Route r
-    ON tp.RouteKey = r.RouteKey
+    FROM (
+        SELECT
+            dd.Month AS "Month Number",
+            dd.MonthName AS "Month",
+            dd.DayName AS "Day of Week",
 
-INNER JOIN sch_Pattern p
-    ON tp.PatternKey = p.PatternKey
+            r.RouteShortName AS "Route Short Name",
+            r.RouteName AS "Route Name",
+            d.DirectionName AS "Direction",
+            tp.TripName AS "Trip",
 
-INNER JOIN sch_Direction d
-    ON p.DirectionKey = d.DirectionKey
+            tp.BoardCount AS "BoardCount",
+            tp.AlightCount AS "AlightCount",
+            tp.TotalCount AS "TotalCount"
 
-WHERE
-    dd.FullDate >= CAST('2026-01-01' AS DATETIME)
-    AND dd.FullDate < CAST('2027-01-01' AS DATETIME)
+        FROM VehicleLocationTP tp
 
-    AND r.RouteShortName IN (
-        '1','10','123','123s','170','2','20','225','240',
-        '25','26','26s','27','3','40','41','42',
-        '47','48','50','64','65','67','68'
-    )
+        INNER JOIN DateDimension dd
+            ON tp.ActualArriveDateKey = dd.DateDimensionKey
 
-    AND d.DirectionName IN ('E','W','N','S')
+        INNER JOIN sch_Route r
+            ON tp.RouteKey = r.RouteKey
 
-    AND tp.BoardCount IS NOT NULL
-    AND tp.AlightCount IS NOT NULL
-    AND tp.TotalCount IS NOT NULL
+        INNER JOIN sch_Pattern p
+            ON tp.PatternKey = p.PatternKey
+
+        INNER JOIN sch_Direction d
+            ON p.DirectionKey = d.DirectionKey
+
+        WHERE
+            dd.FullDate >= CAST('2026-01-01' AS DATETIME)
+            AND dd.FullDate < CAST('2027-01-01' AS DATETIME)
+
+            AND r.RouteShortName IN (
+                '1','10','123','123s','170','2','20','225','240',
+                '25','26','26s','27','3','40','41','42',
+                '47','48','50','64','65','67','68'
+            )
+
+            AND d.DirectionName IN ('E','W','N','S')
+
+            AND tp.BoardCount IS NOT NULL
+            AND tp.AlightCount IS NOT NULL
+            AND tp.TotalCount IS NOT NULL
+
+    ) x
+) y
 
 GROUP BY
-    dd.Month,
-    dd.MonthName,
-    dd.DayName,
-    r.RouteShortName,
-    r.RouteName,
-    d.DirectionName,
-    tp.TripName
+    y."Month Number",
+    y."Month",
+    y."Day of Week",
+    y."Route Short Name",
+    y."Route Name",
+    y."Direction",
+    y."Trip"
