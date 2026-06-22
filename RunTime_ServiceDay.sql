@@ -110,8 +110,6 @@ FROM (
                 '47','48','50','64','65','67','68'
             )
 
-            AND d.DirectionName IN ('E','W','N','S')
-
             AND wic.StartDate IS NOT NULL
             AND wic.EndDate IS NOT NULL
             AND wi.StartDate IS NOT NULL
