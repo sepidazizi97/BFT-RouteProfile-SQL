@@ -58,8 +58,6 @@ FROM (
             '3','40','41','42','47','48','50','64','65','67','68'
         )
 
-        AND d.DirectionName IN ('E','W','N','S')
-
         AND tp.ActualArriveTime IS NOT NULL
         AND tp.ScheduleArriveTime IS NOT NULL
         AND tp.ActualDepartTime IS NOT NULL
