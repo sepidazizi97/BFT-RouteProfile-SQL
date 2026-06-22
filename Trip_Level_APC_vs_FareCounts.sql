@@ -8,7 +8,7 @@ SELECT
     apc."Trip",
 
     apc."APC Boards",
-    fare."Total Fare Counts",
+    ISNULL(fare."Total Fare Counts", 0) AS "Total Fare Counts",
 
     apc."APC Boards" - ISNULL(fare."Total Fare Counts", 0) AS "Difference APC Minus Fare",
 
@@ -56,7 +56,6 @@ FROM (
             '47','48','50','64','65','67','68'
         )
 
-        AND d.DirectionName IN ('E','W','N','S')
         AND tp.BoardCount IS NOT NULL
 
     GROUP BY
@@ -113,7 +112,6 @@ LEFT JOIN (
             '47','48','50','64','65','67','68'
         )
 
-        AND d.DirectionName IN ('E','W','N','S')
         AND vf.FareCount IS NOT NULL
 
     GROUP BY
