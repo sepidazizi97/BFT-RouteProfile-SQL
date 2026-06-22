@@ -78,7 +78,6 @@ FROM (
                 '47','48','50','64','65','67','68'
             )
 
-            AND d.DirectionName IN ('E','W','N','S')
 
             AND tp.BoardCount IS NOT NULL
             AND tp.AlightCount IS NOT NULL
