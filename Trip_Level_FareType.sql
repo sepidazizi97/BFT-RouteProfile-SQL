@@ -57,8 +57,6 @@ WHERE
         '47','48','50','64','65','67','68'
     )
 
-    AND d.DirectionName IN ('E','W','N','S')
-
     AND vf.FareCount IS NOT NULL
 
 GROUP BY
