@@ -1,192 +1,216 @@
 SELECT
-    apc."Season Year",
-    apc."Season Number",
-    apc."Season",
-    apc."Service Day Category",
-    apc."Route Short Name",
-    apc."Route Name",
-    apc."Direction",
-    apc."Trip",
+    otp."Season Year",
+    otp."Season Number",
+    otp."Season",
+    otp."Service Day Category",
+    otp."Route Short Name",
+    otp."Route Name",
+    otp."Direction",
+    otp."Trip",
 
-ISNULL(
-    fare."Average Daily Boardings",
-    0
-) AS "Average Daily Boardings",
+    ISNULL(
+        fare."Average Daily Boardings",
+        0
+    ) AS "Average Daily Boardings",
 
-ISNULL(
-    fare."Total Fare Counts",
-    0
-) AS "Total Fare Counts",
+    ISNULL(
+        fare."Total Fare Counts",
+        0
+    ) AS "Total Fare Counts",
 
-ISNULL(
-    fare."Fare Service Days",
-    0
-) AS "Fare Service Days",
+    ISNULL(
+        fare."Observed Service Days",
+        0
+    ) AS "Observed Service Days",
 
-apc."Median Passenger Load",
+    ISNULL(
+        fare."Days With Fare Records",
+        0
+    ) AS "Days With Fare Records",
 
-------------------------------------------------------------
--- ARRIVAL ON-TIME PERFORMANCE
-------------------------------------------------------------
+    ISNULL(
+        fare."Zero Boarding Days",
+        0
+    ) AS "Zero Boarding Days",
 
-apc."On Time Arrivals",
+    load."Median Passenger Load",
 
-ROUND(
-    100.0 * apc."On Time Arrivals"
-    / NULLIF(apc."Total Arrival Events", 0),
-    1
-) AS "% Arrival On Time",
+    ------------------------------------------------------------
+    -- ARRIVAL ON-TIME PERFORMANCE
+    ------------------------------------------------------------
 
-apc."Early Arrivals",
+    otp."On Time Arrivals",
 
-ROUND(
-    100.0 * apc."Early Arrivals"
-    / NULLIF(apc."Total Arrival Events", 0),
-    1
-) AS "% Arrival Early",
+    ROUND(
+        100.0 * otp."On Time Arrivals"
+        /
+        NULLIF(
+            otp."Total Arrival Events",
+            0
+        ),
+        1
+    ) AS "% Arrival On Time",
 
-apc."Late Arrivals",
+    otp."Early Arrivals",
 
-ROUND(
-    100.0 * apc."Late Arrivals"
-    / NULLIF(apc."Total Arrival Events", 0),
-    1
-) AS "% Arrival Late",
+    ROUND(
+        100.0 * otp."Early Arrivals"
+        /
+        NULLIF(
+            otp."Total Arrival Events",
+            0
+        ),
+        1
+    ) AS "% Arrival Early",
 
-apc."Total Arrival Events",
+    otp."Late Arrivals",
 
-------------------------------------------------------------
--- DEPARTURE ON-TIME PERFORMANCE
-------------------------------------------------------------
+    ROUND(
+        100.0 * otp."Late Arrivals"
+        /
+        NULLIF(
+            otp."Total Arrival Events",
+            0
+        ),
+        1
+    ) AS "% Arrival Late",
 
-apc."On Time Departures",
+    otp."Total Arrival Events",
 
-ROUND(
-    100.0 * apc."On Time Departures"
-    / NULLIF(apc."Total Departure Events", 0),
-    1
-) AS "% Departure On Time",
+    ------------------------------------------------------------
+    -- DEPARTURE ON-TIME PERFORMANCE
+    ------------------------------------------------------------
 
-apc."Early Departures",
+    otp."On Time Departures",
 
-ROUND(
-    100.0 * apc."Early Departures"
-    / NULLIF(apc."Total Departure Events", 0),
-    1
-) AS "% Departure Early",
+    ROUND(
+        100.0 * otp."On Time Departures"
+        /
+        NULLIF(
+            otp."Total Departure Events",
+            0
+        ),
+        1
+    ) AS "% Departure On Time",
 
-apc."Late Departures",
+    otp."Early Departures",
 
-ROUND(
-    100.0 * apc."Late Departures"
-    / NULLIF(apc."Total Departure Events", 0),
-    1
-) AS "% Departure Late",
+    ROUND(
+        100.0 * otp."Early Departures"
+        /
+        NULLIF(
+            otp."Total Departure Events",
+            0
+        ),
+        1
+    ) AS "% Departure Early",
 
-apc."Total Departure Events"
+    otp."Late Departures",
 
-FROM (
+    ROUND(
+        100.0 * otp."Late Departures"
+        /
+        NULLIF(
+            otp."Total Departure Events",
+            0
+        ),
+        1
+    ) AS "% Departure Late",
 
-------------------------------------------------------------
--- APC DATA
--- Used for median passenger load and on-time performance
-------------------------------------------------------------
+    otp."Total Departure Events"
 
-SELECT
-    y."Season Year",
-    y."Season Number",
-    y."Season",
-    y."Service Day Category",
-    y."Route Short Name",
-    y."Route Name",
-    y."Direction",
-    y."Trip",
-
-    MAX(
-        y."Median Passenger Load"
-    ) AS "Median Passenger Load",
-
-    SUM(
-        CASE
-            WHEN y."Arrive Delta Seconds"
-                 BETWEEN -60 AND 300
-            THEN 1
-            ELSE 0
-        END
-    ) AS "On Time Arrivals",
-
-    SUM(
-        CASE
-            WHEN y."Arrive Delta Seconds" < -60
-            THEN 1
-            ELSE 0
-        END
-    ) AS "Early Arrivals",
-
-    SUM(
-        CASE
-            WHEN y."Arrive Delta Seconds" > 300
-            THEN 1
-            ELSE 0
-        END
-    ) AS "Late Arrivals",
-
-    COUNT(y."Arrive Delta Seconds") AS "Total Arrival Events",
-
-    SUM(
-        CASE
-            WHEN y."Depart Delta Seconds"
-                 BETWEEN -60 AND 300
-            THEN 1
-            ELSE 0
-        END
-    ) AS "On Time Departures",
-
-    SUM(
-        CASE
-            WHEN y."Depart Delta Seconds" < -60
-            THEN 1
-            ELSE 0
-        END
-    ) AS "Early Departures",
-
-    SUM(
-        CASE
-            WHEN y."Depart Delta Seconds" > 300
-            THEN 1
-            ELSE 0
-        END
-    ) AS "Late Departures",
-
-    COUNT(y."Depart Delta Seconds") AS "Total Departure Events"
 
 FROM (
+
+    ------------------------------------------------------------
+    -- OTP DATA
+    -- IMPORTANT:
+    -- Does NOT require TotalCount / APC passenger-load data
+    ------------------------------------------------------------
+
     SELECT
-        x.*,
+        x."Season Year",
+        x."Season Number",
+        x."Season",
+        x."Service Day Category",
+        x."Route Short Name",
+        x."Route Name",
+        x."Direction",
+        x."Trip",
 
-        PERCENTILE_CONT(0.5)
-        WITHIN GROUP (
-            ORDER BY x."Passenger Load"
-        )
-        OVER (
-            PARTITION BY
-                x."Season Year",
-                x."Season Number",
-                x."Season",
-                x."Service Day Category",
-                x."Route Short Name",
-                x."Route Name",
-                x."Direction",
-                x."Trip"
-        ) AS "Median Passenger Load"
+        --------------------------------------------------------
+        -- Arrival OTP
+        --------------------------------------------------------
+
+        SUM(
+            CASE
+                WHEN x."Arrive Delta Seconds"
+                     BETWEEN -60 AND 300
+                THEN 1
+                ELSE 0
+            END
+        ) AS "On Time Arrivals",
+
+        SUM(
+            CASE
+                WHEN x."Arrive Delta Seconds" < -60
+                THEN 1
+                ELSE 0
+            END
+        ) AS "Early Arrivals",
+
+        SUM(
+            CASE
+                WHEN x."Arrive Delta Seconds" > 300
+                THEN 1
+                ELSE 0
+            END
+        ) AS "Late Arrivals",
+
+        COUNT(
+            x."Arrive Delta Seconds"
+        ) AS "Total Arrival Events",
+
+        --------------------------------------------------------
+        -- Departure OTP
+        --------------------------------------------------------
+
+        SUM(
+            CASE
+                WHEN x."Depart Delta Seconds"
+                     BETWEEN -60 AND 300
+                THEN 1
+                ELSE 0
+            END
+        ) AS "On Time Departures",
+
+        SUM(
+            CASE
+                WHEN x."Depart Delta Seconds" < -60
+                THEN 1
+                ELSE 0
+            END
+        ) AS "Early Departures",
+
+        SUM(
+            CASE
+                WHEN x."Depart Delta Seconds" > 300
+                THEN 1
+                ELSE 0
+            END
+        ) AS "Late Departures",
+
+        COUNT(
+            x."Depart Delta Seconds"
+        ) AS "Total Departure Events"
 
     FROM (
+
         SELECT
 
-            ------------------------------------------------
-            -- Season year
-            -- December belongs to the following year
-            ------------------------------------------------
+            ----------------------------------------------------
+            -- Season Year
+            ----------------------------------------------------
 
             CASE
                 WHEN dd.Month = 12
@@ -194,9 +218,9 @@ FROM (
                 ELSE dd.Year
             END AS "Season Year",
 
-            ------------------------------------------------
-            -- Season sorting number
-            ------------------------------------------------
+            ----------------------------------------------------
+            -- Season Number
+            ----------------------------------------------------
 
             CASE
                 WHEN dd.Month IN (12,1,2)
@@ -212,9 +236,9 @@ FROM (
                 THEN 4
             END AS "Season Number",
 
-            ------------------------------------------------
-            -- Season name
-            ------------------------------------------------
+            ----------------------------------------------------
+            -- Season
+            ----------------------------------------------------
 
             CASE
                 WHEN dd.Month IN (12,1,2)
@@ -230,9 +254,9 @@ FROM (
                 THEN 'Fall'
             END AS "Season",
 
-            ------------------------------------------------
-            -- Service-day category
-            ------------------------------------------------
+            ----------------------------------------------------
+            -- Service Day
+            ----------------------------------------------------
 
             CASE
                 WHEN dd.DayName IN (
@@ -251,24 +275,47 @@ FROM (
                 THEN 'Sunday'
             END AS "Service Day Category",
 
-            r.RouteShortName AS "Route Short Name",
-            r.RouteName AS "Route Name",
-            d.DirectionName AS "Direction",
-            tp.TripName AS "Trip",
+            r.RouteShortName
+                AS "Route Short Name",
 
-            tp.TotalCount AS "Passenger Load",
+            r.RouteName
+                AS "Route Name",
 
-            DATEDIFF(
-                SECOND,
-                tp.ScheduleArriveTime,
-                tp.ActualArriveTime
-            ) AS "Arrive Delta Seconds",
+            d.DirectionName
+                AS "Direction",
 
-            DATEDIFF(
-                SECOND,
-                tp.ScheduleDepartTime,
-                tp.ActualDepartTime
-            ) AS "Depart Delta Seconds"
+            tp.TripName
+                AS "Trip",
+
+            ----------------------------------------------------
+            -- Arrival Delta
+            ----------------------------------------------------
+
+            CASE
+                WHEN tp.ActualArriveTime IS NOT NULL
+                 AND tp.ScheduleArriveTime IS NOT NULL
+
+                THEN DATEDIFF(
+                    SECOND,
+                    tp.ScheduleArriveTime,
+                    tp.ActualArriveTime
+                )
+            END AS "Arrive Delta Seconds",
+
+            ----------------------------------------------------
+            -- Departure Delta
+            ----------------------------------------------------
+
+            CASE
+                WHEN tp.ActualDepartTime IS NOT NULL
+                 AND tp.ScheduleDepartTime IS NOT NULL
+
+                THEN DATEDIFF(
+                    SECOND,
+                    tp.ScheduleDepartTime,
+                    tp.ActualDepartTime
+                )
+            END AS "Depart Delta Seconds"
 
         FROM VehicleLocationTP tp
 
@@ -302,464 +349,715 @@ FROM (
                 '2','20','225','240','25',
                 '26','26s','27','3','40',
                 '41','42','47','48','50',
+                '60','61',
                 '64','65','67','68'
             )
 
-            AND tp.TotalCount IS NOT NULL
-
-            AND tp.ActualArriveTime IS NOT NULL
-
-            AND tp.ScheduleArriveTime IS NOT NULL
-
             AND tp.InBetween <> 1
 
+            AND tp.TripName IS NOT NULL
+
     ) x
-) y
 
-GROUP BY
-    y."Season Year",
-    y."Season Number",
-    y."Season",
-    y."Service Day Category",
-    y."Route Short Name",
-    y."Route Name",
-    y."Direction",
-    y."Trip"
+    GROUP BY
+        x."Season Year",
+        x."Season Number",
+        x."Season",
+        x."Service Day Category",
+        x."Route Short Name",
+        x."Route Name",
+        x."Direction",
+        x."Trip"
 
-) apc
+) otp
+
+
+------------------------------------------------------------
+-- PASSENGER LOAD
+------------------------------------------------------------
 
 LEFT JOIN (
+
+    SELECT
+        y."Season Year",
+        y."Season Number",
+        y."Season",
+        y."Service Day Category",
+        y."Route Short Name",
+        y."Route Name",
+        y."Direction",
+        y."Trip",
+
+        MAX(
+            y."Median Passenger Load"
+        ) AS "Median Passenger Load"
+
+    FROM (
+
+        SELECT
+            x.*,
+
+            PERCENTILE_CONT(0.5)
+            WITHIN GROUP (
+                ORDER BY x."Passenger Load"
+            )
+            OVER (
+                PARTITION BY
+                    x."Season Year",
+                    x."Season Number",
+                    x."Season",
+                    x."Service Day Category",
+                    x."Route Short Name",
+                    x."Route Name",
+                    x."Direction",
+                    x."Trip"
+            ) AS "Median Passenger Load"
+
+        FROM (
+
+            SELECT
+
+                CASE
+                    WHEN dd.Month = 12
+                    THEN dd.Year + 1
+                    ELSE dd.Year
+                END AS "Season Year",
+
+                CASE
+                    WHEN dd.Month IN (12,1,2)
+                    THEN 1
+
+                    WHEN dd.Month IN (3,4,5)
+                    THEN 2
+
+                    WHEN dd.Month IN (6,7,8)
+                    THEN 3
+
+                    WHEN dd.Month IN (9,10,11)
+                    THEN 4
+                END AS "Season Number",
+
+                CASE
+                    WHEN dd.Month IN (12,1,2)
+                    THEN 'Winter'
+
+                    WHEN dd.Month IN (3,4,5)
+                    THEN 'Spring'
+
+                    WHEN dd.Month IN (6,7,8)
+                    THEN 'Summer'
+
+                    WHEN dd.Month IN (9,10,11)
+                    THEN 'Fall'
+                END AS "Season",
+
+                CASE
+                    WHEN dd.DayName IN (
+                        'Monday',
+                        'Tuesday',
+                        'Wednesday',
+                        'Thursday',
+                        'Friday'
+                    )
+                    THEN 'Weekday'
+
+                    WHEN dd.DayName = 'Saturday'
+                    THEN 'Saturday'
+
+                    WHEN dd.DayName = 'Sunday'
+                    THEN 'Sunday'
+                END AS "Service Day Category",
+
+                r.RouteShortName
+                    AS "Route Short Name",
+
+                r.RouteName
+                    AS "Route Name",
+
+                d.DirectionName
+                    AS "Direction",
+
+                tp.TripName
+                    AS "Trip",
+
+                tp.TotalCount
+                    AS "Passenger Load"
+
+            FROM VehicleLocationTP tp
+
+            INNER JOIN DateDimension dd
+                ON tp.ActualArriveDateKey =
+                   dd.DateDimensionKey
+
+            INNER JOIN sch_Route r
+                ON tp.RouteKey =
+                   r.RouteKey
+
+            INNER JOIN sch_Pattern p
+                ON tp.PatternKey =
+                   p.PatternKey
+
+            INNER JOIN sch_Direction d
+                ON p.DirectionKey =
+                   d.DirectionKey
+
+            WHERE
+                dd.FullDate >= CAST(
+                    '2025-12-01' AS DATETIME
+                )
+
+                AND dd.FullDate < CAST(
+                    '2027-01-01' AS DATETIME
+                )
+
+                AND r.RouteShortName IN (
+                    '1','10','123','123s','170',
+                    '2','20','225','240','25',
+                    '26','26s','27','3','40',
+                    '41','42','47','48','50',
+                    '60','61',
+                    '64','65','67','68'
+                )
+
+                ------------------------------------------------
+                -- APC restriction applies ONLY here
+                ------------------------------------------------
+
+                AND tp.TotalCount IS NOT NULL
+
+                AND tp.TripName IS NOT NULL
+
+                AND tp.InBetween <> 1
+
+        ) x
+
+    ) y
+
+    GROUP BY
+        y."Season Year",
+        y."Season Number",
+        y."Season",
+        y."Service Day Category",
+        y."Route Short Name",
+        y."Route Name",
+        y."Direction",
+        y."Trip"
+
+) load
+
+    ON otp."Season Year" =
+       load."Season Year"
+
+    AND otp."Season Number" =
+        load."Season Number"
+
+    AND otp."Season" =
+        load."Season"
+
+    AND otp."Service Day Category" =
+        load."Service Day Category"
+
+    AND otp."Route Short Name" =
+        load."Route Short Name"
+
+    AND otp."Direction" =
+        load."Direction"
+
+    AND otp."Trip" =
+        load."Trip"
+
 
 ------------------------------------------------------------
 -- FARE DATA
--- Average daily boardings, total fare counts, and fare days
 ------------------------------------------------------------
-
-SELECT
-    fare_daily."Season Year",
-    fare_daily."Season Number",
-    fare_daily."Season",
-    fare_daily."Service Day Category",
-    fare_daily."Route Short Name",
-    fare_daily."Route Name",
-    fare_daily."Direction",
-    fare_daily."Trip",
-
-    ROUND(
-        CAST(
-            SUM(fare_daily."Daily Fare Counts")
-            AS DECIMAL(18,2)
-        )
-        /
-        NULLIF(
-            MAX(
-                service_days."Observed Service Days"
-            ),
-            0
-        ),
-        1
-    ) AS "Average Daily Boardings",
-
-    SUM(
-        fare_daily."Daily Fare Counts"
-    ) AS "Total Fare Counts",
-
-    COUNT(*) AS "Fare Service Days"
-
-FROM (
-
-    --------------------------------------------------------
-    -- Calculate fare boardings for each service date
-    --------------------------------------------------------
-
-    SELECT
-        CASE
-            WHEN dd.Month = 12
-            THEN dd.Year + 1
-            ELSE dd.Year
-        END AS "Season Year",
-
-        CASE
-            WHEN dd.Month IN (12,1,2)
-            THEN 1
-
-            WHEN dd.Month IN (3,4,5)
-            THEN 2
-
-            WHEN dd.Month IN (6,7,8)
-            THEN 3
-
-            WHEN dd.Month IN (9,10,11)
-            THEN 4
-        END AS "Season Number",
-
-        CASE
-            WHEN dd.Month IN (12,1,2)
-            THEN 'Winter'
-
-            WHEN dd.Month IN (3,4,5)
-            THEN 'Spring'
-
-            WHEN dd.Month IN (6,7,8)
-            THEN 'Summer'
-
-            WHEN dd.Month IN (9,10,11)
-            THEN 'Fall'
-        END AS "Season",
-
-        CAST(
-            dd.FullDate AS DATE
-        ) AS "Service Date",
-
-        CASE
-            WHEN dd.DayName IN (
-                'Monday',
-                'Tuesday',
-                'Wednesday',
-                'Thursday',
-                'Friday'
-            )
-            THEN 'Weekday'
-
-            WHEN dd.DayName = 'Saturday'
-            THEN 'Saturday'
-
-            WHEN dd.DayName = 'Sunday'
-            THEN 'Sunday'
-        END AS "Service Day Category",
-
-        r.RouteShortName AS "Route Short Name",
-        r.RouteName AS "Route Name",
-        d.DirectionName AS "Direction",
-        tp.TripName AS "Trip",
-
-        SUM(
-            vf.FareCount
-        ) AS "Daily Fare Counts"
-
-    FROM DateDimension dd
-
-    INNER JOIN VehicleLocationTPFare vf
-        ON dd.DateDimensionKey =
-           vf.EventDateKey
-
-    INNER JOIN sch_WorkItemCompleted wic
-        ON wic.WorkItemCompletedKey =
-           vf.WorkItemCompletedKey
-
-    INNER JOIN VehicleLocationTP tp
-        ON tp.VehicleLocationTPKey =
-           vf.VehicleLocationTPKey
-
-    INNER JOIN sch_Route r
-        ON r.RouteKey =
-           wic.RouteKey
-
-    INNER JOIN sch_Pattern p
-        ON p.PatternKey =
-           tp.PatternKey
-
-    INNER JOIN sch_Direction d
-        ON d.DirectionKey =
-           p.DirectionKey
-
-    WHERE
-        dd.FullDate >= CAST(
-            '2025-12-01' AS DATETIME
-        )
-
-        AND dd.FullDate < CAST(
-            '2027-01-01' AS DATETIME
-        )
-
-        AND vf.FareTypeKey NOT IN (
-            9,11,14,20
-        )
-
-        AND r.RouteShortName IN (
-            '1','10','123','123s','170',
-            '2','20','225','240','25',
-            '26','26s','27','3','40',
-            '41','42','47','48','50',
-            '64','65','67','68'
-        )
-
-        AND vf.FareCount IS NOT NULL
-
-    GROUP BY
-        CASE
-            WHEN dd.Month = 12
-            THEN dd.Year + 1
-            ELSE dd.Year
-        END,
-
-        CASE
-            WHEN dd.Month IN (12,1,2)
-            THEN 1
-
-            WHEN dd.Month IN (3,4,5)
-            THEN 2
-
-            WHEN dd.Month IN (6,7,8)
-            THEN 3
-
-            WHEN dd.Month IN (9,10,11)
-            THEN 4
-        END,
-
-        CASE
-            WHEN dd.Month IN (12,1,2)
-            THEN 'Winter'
-
-            WHEN dd.Month IN (3,4,5)
-            THEN 'Spring'
-
-            WHEN dd.Month IN (6,7,8)
-            THEN 'Summer'
-
-            WHEN dd.Month IN (9,10,11)
-            THEN 'Fall'
-        END,
-
-        CAST(
-            dd.FullDate AS DATE
-        ),
-
-        CASE
-            WHEN dd.DayName IN (
-                'Monday',
-                'Tuesday',
-                'Wednesday',
-                'Thursday',
-                'Friday'
-            )
-            THEN 'Weekday'
-
-            WHEN dd.DayName = 'Saturday'
-            THEN 'Saturday'
-
-            WHEN dd.DayName = 'Sunday'
-            THEN 'Sunday'
-        END,
-
-        r.RouteShortName,
-        r.RouteName,
-        d.DirectionName,
-        tp.TripName
-
-) fare_daily
 
 LEFT JOIN (
 
-    --------------------------------------------------------
-    -- Count distinct dates each route-direction-trip was
-    -- observed operating in VehicleLocationTP
-    --------------------------------------------------------
-
     SELECT
-        CASE
-            WHEN dd_service.Month = 12
-            THEN dd_service.Year + 1
-            ELSE dd_service.Year
-        END AS "Season Year",
+        fare_daily."Season Year",
+        fare_daily."Season Number",
+        fare_daily."Season",
+        fare_daily."Service Day Category",
+        fare_daily."Route Short Name",
+        fare_daily."Route Name",
+        fare_daily."Direction",
+        fare_daily."Trip",
 
-        CASE
-            WHEN dd_service.Month IN (12,1,2)
-            THEN 1
+        --------------------------------------------------------
+        -- Average daily boardings
+        --------------------------------------------------------
 
-            WHEN dd_service.Month IN (3,4,5)
-            THEN 2
-
-            WHEN dd_service.Month IN (6,7,8)
-            THEN 3
-
-            WHEN dd_service.Month IN (9,10,11)
-            THEN 4
-        END AS "Season Number",
-
-        CASE
-            WHEN dd_service.Month IN (12,1,2)
-            THEN 'Winter'
-
-            WHEN dd_service.Month IN (3,4,5)
-            THEN 'Spring'
-
-            WHEN dd_service.Month IN (6,7,8)
-            THEN 'Summer'
-
-            WHEN dd_service.Month IN (9,10,11)
-            THEN 'Fall'
-        END AS "Season",
-
-        CASE
-            WHEN dd_service.DayName IN (
-                'Monday',
-                'Tuesday',
-                'Wednesday',
-                'Thursday',
-                'Friday'
+        ROUND(
+            CAST(
+                SUM(
+                    fare_daily."Daily Fare Counts"
+                )
+                AS DECIMAL(18,2)
             )
-            THEN 'Weekday'
+            /
+            NULLIF(
+                MAX(
+                    service_days."Observed Service Days"
+                ),
+                0
+            ),
+            1
+        ) AS "Average Daily Boardings",
 
-            WHEN dd_service.DayName = 'Saturday'
-            THEN 'Saturday'
+        --------------------------------------------------------
+        -- Total fare
+        --------------------------------------------------------
 
-            WHEN dd_service.DayName = 'Sunday'
-            THEN 'Sunday'
-        END AS "Service Day Category",
+        SUM(
+            fare_daily."Daily Fare Counts"
+        ) AS "Total Fare Counts",
 
-        r_service.RouteShortName AS "Route Short Name",
-        r_service.RouteName AS "Route Name",
-        d_service.DirectionName AS "Direction",
-        tp_service.TripName AS "Trip",
+        MAX(
+            service_days."Observed Service Days"
+        ) AS "Observed Service Days",
 
-        COUNT(
-            DISTINCT CAST(
-                dd_service.FullDate AS DATE
+        COUNT(*)
+            AS "Days With Fare Records",
+
+        CASE
+            WHEN
+                MAX(
+                    service_days."Observed Service Days"
+                ) - COUNT(*) < 0
+            THEN 0
+
+            ELSE
+                MAX(
+                    service_days."Observed Service Days"
+                ) - COUNT(*)
+        END AS "Zero Boarding Days"
+
+    FROM (
+
+        --------------------------------------------------------
+        -- DAILY FARE COUNTS
+        --------------------------------------------------------
+
+        SELECT
+
+            CASE
+                WHEN dd.Month = 12
+                THEN dd.Year + 1
+                ELSE dd.Year
+            END AS "Season Year",
+
+            CASE
+                WHEN dd.Month IN (12,1,2)
+                THEN 1
+
+                WHEN dd.Month IN (3,4,5)
+                THEN 2
+
+                WHEN dd.Month IN (6,7,8)
+                THEN 3
+
+                WHEN dd.Month IN (9,10,11)
+                THEN 4
+            END AS "Season Number",
+
+            CASE
+                WHEN dd.Month IN (12,1,2)
+                THEN 'Winter'
+
+                WHEN dd.Month IN (3,4,5)
+                THEN 'Spring'
+
+                WHEN dd.Month IN (6,7,8)
+                THEN 'Summer'
+
+                WHEN dd.Month IN (9,10,11)
+                THEN 'Fall'
+            END AS "Season",
+
+            CAST(
+                dd.FullDate AS DATE
+            ) AS "Service Date",
+
+            CASE
+                WHEN dd.DayName IN (
+                    'Monday',
+                    'Tuesday',
+                    'Wednesday',
+                    'Thursday',
+                    'Friday'
+                )
+                THEN 'Weekday'
+
+                WHEN dd.DayName = 'Saturday'
+                THEN 'Saturday'
+
+                WHEN dd.DayName = 'Sunday'
+                THEN 'Sunday'
+            END AS "Service Day Category",
+
+            r.RouteShortName
+                AS "Route Short Name",
+
+            r.RouteName
+                AS "Route Name",
+
+            d.DirectionName
+                AS "Direction",
+
+            tp.TripName
+                AS "Trip",
+
+            SUM(
+                vf.FareCount
+            ) AS "Daily Fare Counts"
+
+        FROM DateDimension dd
+
+        INNER JOIN VehicleLocationTPFare vf
+            ON dd.DateDimensionKey =
+               vf.EventDateKey
+
+        INNER JOIN sch_WorkItemCompleted wic
+            ON wic.WorkItemCompletedKey =
+               vf.WorkItemCompletedKey
+
+        INNER JOIN VehicleLocationTP tp
+            ON tp.VehicleLocationTPKey =
+               vf.VehicleLocationTPKey
+
+        INNER JOIN sch_Route r
+            ON r.RouteKey =
+               wic.RouteKey
+
+        INNER JOIN sch_Pattern p
+            ON p.PatternKey =
+               tp.PatternKey
+
+        INNER JOIN sch_Direction d
+            ON d.DirectionKey =
+               p.DirectionKey
+
+        WHERE
+            dd.FullDate >= CAST(
+                '2025-12-01' AS DATETIME
             )
-        ) AS "Observed Service Days"
 
-    FROM VehicleLocationTP tp_service
+            AND dd.FullDate < CAST(
+                '2027-01-01' AS DATETIME
+            )
 
-    INNER JOIN DateDimension dd_service
-        ON tp_service.ActualArriveDateKey =
-           dd_service.DateDimensionKey
+            AND vf.FareTypeKey NOT IN (
+                9,11,14,20
+            )
 
-    INNER JOIN sch_Route r_service
-        ON tp_service.RouteKey =
-           r_service.RouteKey
+            AND r.RouteShortName IN (
+                '1','10','123','123s','170',
+                '2','20','225','240','25',
+                '26','26s','27','3','40',
+                '41','42','47','48','50',
+                '60','61',
+                '64','65','67','68'
+            )
 
-    INNER JOIN sch_Pattern p_service
-        ON tp_service.PatternKey =
-           p_service.PatternKey
+            AND vf.FareCount IS NOT NULL
 
-    INNER JOIN sch_Direction d_service
-        ON p_service.DirectionKey =
-           d_service.DirectionKey
+            AND tp.TripName IS NOT NULL
 
-    WHERE
-        dd_service.FullDate >= CAST(
-            '2025-12-01' AS DATETIME
-        )
+        GROUP BY
 
-        AND dd_service.FullDate < CAST(
-            '2027-01-01' AS DATETIME
-        )
+            CASE
+                WHEN dd.Month = 12
+                THEN dd.Year + 1
+                ELSE dd.Year
+            END,
 
-        AND r_service.RouteShortName IN (
-            '1','10','123','123s','170',
-            '2','20','225','240','25',
-            '26','26s','27','3','40',
-            '41','42','47','48','50',
-            '64','65','67','68'
-        )
+            CASE
+                WHEN dd.Month IN (12,1,2)
+                THEN 1
 
-        AND tp_service.TripName IS NOT NULL
+                WHEN dd.Month IN (3,4,5)
+                THEN 2
 
-        AND tp_service.InBetween <> 1
+                WHEN dd.Month IN (6,7,8)
+                THEN 3
+
+                WHEN dd.Month IN (9,10,11)
+                THEN 4
+            END,
+
+            CASE
+                WHEN dd.Month IN (12,1,2)
+                THEN 'Winter'
+
+                WHEN dd.Month IN (3,4,5)
+                THEN 'Spring'
+
+                WHEN dd.Month IN (6,7,8)
+                THEN 'Summer'
+
+                WHEN dd.Month IN (9,10,11)
+                THEN 'Fall'
+            END,
+
+            CAST(
+                dd.FullDate AS DATE
+            ),
+
+            CASE
+                WHEN dd.DayName IN (
+                    'Monday',
+                    'Tuesday',
+                    'Wednesday',
+                    'Thursday',
+                    'Friday'
+                )
+                THEN 'Weekday'
+
+                WHEN dd.DayName = 'Saturday'
+                THEN 'Saturday'
+
+                WHEN dd.DayName = 'Sunday'
+                THEN 'Sunday'
+            END,
+
+            r.RouteShortName,
+            r.RouteName,
+            d.DirectionName,
+            tp.TripName
+
+    ) fare_daily
+
+
+    ------------------------------------------------------------
+    -- SERVICE DAYS
+    ------------------------------------------------------------
+
+    LEFT JOIN (
+
+        SELECT
+
+            CASE
+                WHEN dd_service.Month = 12
+                THEN dd_service.Year + 1
+                ELSE dd_service.Year
+            END AS "Season Year",
+
+            CASE
+                WHEN dd_service.Month IN (12,1,2)
+                THEN 1
+
+                WHEN dd_service.Month IN (3,4,5)
+                THEN 2
+
+                WHEN dd_service.Month IN (6,7,8)
+                THEN 3
+
+                WHEN dd_service.Month IN (9,10,11)
+                THEN 4
+            END AS "Season Number",
+
+            CASE
+                WHEN dd_service.Month IN (12,1,2)
+                THEN 'Winter'
+
+                WHEN dd_service.Month IN (3,4,5)
+                THEN 'Spring'
+
+                WHEN dd_service.Month IN (6,7,8)
+                THEN 'Summer'
+
+                WHEN dd_service.Month IN (9,10,11)
+                THEN 'Fall'
+            END AS "Season",
+
+            CASE
+                WHEN dd_service.DayName IN (
+                    'Monday',
+                    'Tuesday',
+                    'Wednesday',
+                    'Thursday',
+                    'Friday'
+                )
+                THEN 'Weekday'
+
+                WHEN dd_service.DayName = 'Saturday'
+                THEN 'Saturday'
+
+                WHEN dd_service.DayName = 'Sunday'
+                THEN 'Sunday'
+            END AS "Service Day Category",
+
+            r_service.RouteShortName
+                AS "Route Short Name",
+
+            r_service.RouteName
+                AS "Route Name",
+
+            d_service.DirectionName
+                AS "Direction",
+
+            tp_service.TripName
+                AS "Trip",
+
+            COUNT(
+                DISTINCT CAST(
+                    dd_service.FullDate AS DATE
+                )
+            ) AS "Observed Service Days"
+
+        FROM VehicleLocationTP tp_service
+
+        INNER JOIN DateDimension dd_service
+            ON tp_service.ActualArriveDateKey =
+               dd_service.DateDimensionKey
+
+        INNER JOIN sch_Route r_service
+            ON tp_service.RouteKey =
+               r_service.RouteKey
+
+        INNER JOIN sch_Pattern p_service
+            ON tp_service.PatternKey =
+               p_service.PatternKey
+
+        INNER JOIN sch_Direction d_service
+            ON p_service.DirectionKey =
+               d_service.DirectionKey
+
+        WHERE
+            dd_service.FullDate >= CAST(
+                '2025-12-01' AS DATETIME
+            )
+
+            AND dd_service.FullDate < CAST(
+                '2027-01-01' AS DATETIME
+            )
+
+            AND r_service.RouteShortName IN (
+                '1','10','123','123s','170',
+                '2','20','225','240','25',
+                '26','26s','27','3','40',
+                '41','42','47','48','50',
+                '60','61',
+                '64','65','67','68'
+            )
+
+            AND tp_service.TripName IS NOT NULL
+
+            AND tp_service.ActualArriveTime
+                IS NOT NULL
+
+            AND tp_service.InBetween <> 1
+
+        GROUP BY
+
+            CASE
+                WHEN dd_service.Month = 12
+                THEN dd_service.Year + 1
+                ELSE dd_service.Year
+            END,
+
+            CASE
+                WHEN dd_service.Month IN (12,1,2)
+                THEN 1
+
+                WHEN dd_service.Month IN (3,4,5)
+                THEN 2
+
+                WHEN dd_service.Month IN (6,7,8)
+                THEN 3
+
+                WHEN dd_service.Month IN (9,10,11)
+                THEN 4
+            END,
+
+            CASE
+                WHEN dd_service.Month IN (12,1,2)
+                THEN 'Winter'
+
+                WHEN dd_service.Month IN (3,4,5)
+                THEN 'Spring'
+
+                WHEN dd_service.Month IN (6,7,8)
+                THEN 'Summer'
+
+                WHEN dd_service.Month IN (9,10,11)
+                THEN 'Fall'
+            END,
+
+            CASE
+                WHEN dd_service.DayName IN (
+                    'Monday',
+                    'Tuesday',
+                    'Wednesday',
+                    'Thursday',
+                    'Friday'
+                )
+                THEN 'Weekday'
+
+                WHEN dd_service.DayName = 'Saturday'
+                THEN 'Saturday'
+
+                WHEN dd_service.DayName = 'Sunday'
+                THEN 'Sunday'
+            END,
+
+            r_service.RouteShortName,
+            r_service.RouteName,
+            d_service.DirectionName,
+            tp_service.TripName
+
+    ) service_days
+
+        ON fare_daily."Season Year" =
+           service_days."Season Year"
+
+        AND fare_daily."Season Number" =
+            service_days."Season Number"
+
+        AND fare_daily."Season" =
+            service_days."Season"
+
+        AND fare_daily."Service Day Category" =
+            service_days."Service Day Category"
+
+        AND fare_daily."Route Short Name" =
+            service_days."Route Short Name"
+
+        AND fare_daily."Direction" =
+            service_days."Direction"
+
+        AND fare_daily."Trip" =
+            service_days."Trip"
 
     GROUP BY
-        CASE
-            WHEN dd_service.Month = 12
-            THEN dd_service.Year + 1
-            ELSE dd_service.Year
-        END,
-
-        CASE
-            WHEN dd_service.Month IN (12,1,2)
-            THEN 1
-
-            WHEN dd_service.Month IN (3,4,5)
-            THEN 2
-
-            WHEN dd_service.Month IN (6,7,8)
-            THEN 3
-
-            WHEN dd_service.Month IN (9,10,11)
-            THEN 4
-        END,
-
-        CASE
-            WHEN dd_service.Month IN (12,1,2)
-            THEN 'Winter'
-
-            WHEN dd_service.Month IN (3,4,5)
-            THEN 'Spring'
-
-            WHEN dd_service.Month IN (6,7,8)
-            THEN 'Summer'
-
-            WHEN dd_service.Month IN (9,10,11)
-            THEN 'Fall'
-        END,
-
-        CASE
-            WHEN dd_service.DayName IN (
-                'Monday',
-                'Tuesday',
-                'Wednesday',
-                'Thursday',
-                'Friday'
-            )
-            THEN 'Weekday'
-
-            WHEN dd_service.DayName = 'Saturday'
-            THEN 'Saturday'
-
-            WHEN dd_service.DayName = 'Sunday'
-            THEN 'Sunday'
-        END,
-
-        r_service.RouteShortName,
-        r_service.RouteName,
-        d_service.DirectionName,
-        tp_service.TripName
-
-) service_days
-
-ON fare_daily."Season Year" =
-   service_days."Season Year"
-
-AND fare_daily."Season Number" =
-    service_days."Season Number"
-
-AND fare_daily."Season" =
-    service_days."Season"
-
-AND fare_daily."Service Day Category" =
-    service_days."Service Day Category"
-
-AND fare_daily."Route Short Name" =
-    service_days."Route Short Name"
-
-AND fare_daily."Direction" =
-    service_days."Direction"
-
-AND fare_daily."Trip" =
-    service_days."Trip"
-
-GROUP BY
-    fare_daily."Season Year",
-    fare_daily."Season Number",
-    fare_daily."Season",
-    fare_daily."Service Day Category",
-    fare_daily."Route Short Name",
-    fare_daily."Route Name",
-    fare_daily."Direction",
-    fare_daily."Trip"
+        fare_daily."Season Year",
+        fare_daily."Season Number",
+        fare_daily."Season",
+        fare_daily."Service Day Category",
+        fare_daily."Route Short Name",
+        fare_daily."Route Name",
+        fare_daily."Direction",
+        fare_daily."Trip"
 
 ) fare
 
-ON apc."Season Year" =fare."Season Year"
+    ON otp."Season Year" =
+       fare."Season Year"
 
-AND apc."Season Number" =fare."Season Number"
+    AND otp."Season Number" =
+        fare."Season Number"
 
-AND apc."Season" =fare."Season"
+    AND otp."Season" =
+        fare."Season"
 
-AND apc."Service Day Category" =fare."Service Day Category"
+    AND otp."Service Day Category" =
+        fare."Service Day Category"
 
-AND apc."Route Short Name" =fare."Route Short Name"
+    AND otp."Route Short Name" =
+        fare."Route Short Name"
 
-AND apc."Direction" =fare."Direction"
+    AND otp."Direction" =
+        fare."Direction"
 
-AND apc."Trip" =fare."Trip"
+    AND otp."Trip" =
+        fare."Trip"
