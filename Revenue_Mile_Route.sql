@@ -1,20 +1,16 @@
-SELECT DISTINCT TOP 20 
-   "New View"."Month" AS C2,
-   "New View"."Route Short Name" AS C4,
-   "New View"."Direction" AS C6,
-   "New View"."Revenue Miles" AS C8,
-   "New View"."Trip Count" AS C10
-FROM (
-   SELECT
-    dd.Month AS "Month Number",
-    dd.MonthName AS "Month",
+SELECT
+    dd.Year AS "Year",
 
     r.RouteShortName AS "Route Short Name",
+
     r.RouteName AS "Route Name",
 
     d.DirectionName AS "Direction",
 
-    SUM(wic.OdometerEnd - wic.OdometerStart) AS "Revenue Miles",
+    ROUND(
+        SUM(wic.OdometerEnd - wic.OdometerStart),
+        2
+    ) AS "Annual Revenue Miles",
 
     COUNT(*) AS "Trip Count"
 
@@ -39,25 +35,26 @@ INNER JOIN BlockItemType blit
     ON blit.BlockItemTypeKey = wi.BlockItemTypeKey
 
 WHERE
-    dd.FullDate >= CAST('2026-01-01' AS DATETIME)
-    AND dd.FullDate < CAST('2027-01-01' AS DATETIME)
+    dd.Year = 2026
 
     AND blit.BlockItemTypeCode = 2
 
     AND r.RouteShortName IN (
-        '1','10','123','123s','170','2','20','225','240',
-        '25','26','26s','27','3','40','41','42',
-        '47','48','50','64','65','67','68'
+        '1','10','123','123s','170',
+        '2','20','225','240','25',
+        '26','26s','27','3','40',
+        '41','42','47','48','50',
+        '60','61','64','65','67','68'
     )
-
 
     AND wic.OdometerEnd > wic.OdometerStart
 
 GROUP BY
-    dd.Month,
-    dd.MonthName,
+    dd.Year,
     r.RouteShortName,
     r.RouteName,
     d.DirectionName
 
-) AS "New View"
+ORDER BY
+    r.RouteShortName,
+    d.DirectionName
